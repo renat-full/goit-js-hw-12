@@ -21,9 +21,13 @@ let totalHits = 0;
 form.addEventListener("submit", onFormSubmit);
 loadMoreBtn.addEventListener("click", onLoadMore);
 
-async function fetchImages(page) {
+async function fetchImages(page, { reset = false } = {}) {
   showLoader();
   hideLoadMoreButton();
+
+  if (reset) {
+    clearGallery();
+  }
 
   try {
     const data = await getImagesByQuery(currentQuery, page);
@@ -31,7 +35,6 @@ async function fetchImages(page) {
 
     if (page === 1) {
       totalHits = hitsTotal;
-      clearGallery();
       if (hits.length === 0) {
         iziToast.error({
           title: "No results",
@@ -51,6 +54,7 @@ async function fetchImages(page) {
     if (galleryItemsCount < totalHits) {
       showLoadMoreButton();
     } else if (galleryItemsCount >= totalHits && page > 1) {
+      hideLoadMoreButton();
       iziToast.info({
         title: "End of results",
         message: "We're sorry, but you've reached the end of search results.",
@@ -61,7 +65,6 @@ async function fetchImages(page) {
       title: "Error",
       message: "Something went wrong. Please try again later.",
     });
-    console.error(err);
   } finally {
     hideLoader();
   }
@@ -79,7 +82,7 @@ async function onFormSubmit(e) {
   }
   currentQuery = query;
   currentPage = 1;
-  await fetchImages(currentPage);
+  await fetchImages(currentPage, { reset: true });
   form.reset();
 }
 
